@@ -453,3 +453,8 @@ RegisterNUICallback('select', function(data, cb)
         state.setActive(false)
     end
 end)
+
+RegisterNUICallback('getServerColor', function(_, cb)
+    local SERVER_COLOR = GetConvar("color_hex", "#00c5ff");
+    return cb(SERVER_COLOR);
+end)
