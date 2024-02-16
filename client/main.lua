@@ -259,7 +259,7 @@ local function startTargeting()
                         totalOptions += 1
                         options.__builtin = {
                             {
-                                icon = 'fa-solid fa-circle-chevron-left',
+                                icon = "fa-solid fa-angles-left",
                                 label = locale('go_back'),
                                 name = 'builtin:goback',
                                 menuName = currentMenu,
