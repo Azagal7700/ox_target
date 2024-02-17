@@ -164,7 +164,7 @@ local function startTargeting()
             end
         end
 
-        if hit and distance < 7 then
+        if (hit and distance < 50.0) then
             local newOptions
             nearbyZones, zonesChanged = getNearbyZones(endCoords)
 

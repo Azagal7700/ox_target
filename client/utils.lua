@@ -12,7 +12,7 @@ local GetShapeTestResultIncludingMaterial = GetShapeTestResultIncludingMaterial
 ---@return number materialHash
 function utils.raycastFromCamera(flag)
     local coords, normal = GetWorldCoordFromScreenCoord(0.5, 0.5)
-    local destination = coords + normal * 10
+    local destination = (coords + normal * 100)
     local handle = StartShapeTestLosProbe(coords.x, coords.y, coords.z, destination.x, destination.y, destination.z,
         flag, cache.ped, 4)
 
