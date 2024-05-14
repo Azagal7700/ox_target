@@ -420,6 +420,7 @@ options_mt.size = 1
 
 function options_mt:wipe()
     options_mt.size = 1
+    self.__global = {};
     self.globalTarget = nil
     self.model = nil
     self.entity = nil
