@@ -123,6 +123,7 @@ local function shouldHide(option, distance, endCoords, entityHit, entityType, en
     end
 end
 
+local menuOpen = false
 local function startTargeting()
     if state.isDisabled() or state.isActive() or IsNuiFocused() or IsPauseMenuActive() then return end
 
@@ -140,8 +141,7 @@ local function startTargeting()
             lastCoords = endCoords == vec0 and lastCoords or endCoords or vec0
 
             if debug then
-                DrawMarker(28, lastCoords.x, lastCoords.y, lastCoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.2,
-                    0.2,
+                DrawMarker(28, lastCoords.x, lastCoords.y, lastCoords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.2,
                     ---@diagnostic disable-next-line: param-type-mismatch
                     255, 42, 24, 100, false, false, 0, true, false, false, false)
             end
@@ -159,9 +159,11 @@ local function startTargeting()
 
                 if not hasTarget or options and IsDisabledControlJustPressed(0, 25) then
                     state.setNuiFocus(false, false)
+                    menuOpen = false
                 end
             elseif hasTarget and IsDisabledControlJustPressed(0, mouseButton) then
                 state.setNuiFocus(true, true)
+                menuOpen = true
             end
 
             Wait(0)
@@ -176,28 +178,32 @@ local function startTargeting()
             break
         end
 
-        local playerCoords = GetEntityCoords(cache.ped)
-        hit, entityHit, endCoords = lib.raycast.fromCamera(flag, 4, 300)
-        distance = #(playerCoords - endCoords)
+        if (not (menuOpen == true)) then
+            local playerCoords = GetEntityCoords(cache.ped)
+            hit, entityHit, endCoords = lib.raycast.fromCamera(flag, 4, 300)
+            distance = #(playerCoords - endCoords)
 
-        if entityHit ~= 0 and entityHit ~= lastEntity then
-            local success, result = pcall(GetEntityType, entityHit)
-            entityType = success and result or 0
-        end
+            if entityHit ~= 0 and entityHit ~= lastEntity then
+                local success, result = pcall(GetEntityType, entityHit)
+                entityType = success and result or 0
+            end
 
-        if entityType == 0 then
-            local _flag = flag == 511 and 26 or 511
-            local _hit, _entityHit, _endCoords = lib.raycast.fromCamera(_flag, 4, 300)
-            local _distance = #(playerCoords - _endCoords)
+            if entityType == 0 then
+                local _flag = flag == 511 and 26 or 511
+                local _hit, _entityHit, _endCoords = lib.raycast.fromCamera(_flag, 4, 300)
+                local _distance = #(playerCoords - _endCoords)
 
-            if _distance < distance then
-                flag, hit, entityHit, endCoords, distance = _flag, _hit, _entityHit, _endCoords, _distance
+                if _distance < distance then
+                    flag, hit, entityHit, endCoords, distance = _flag, _hit, _entityHit, _endCoords, _distance
 
-                if entityHit ~= 0 then
-                    local success, result = pcall(GetEntityType, entityHit)
-                    entityType = success and result or 0
+                    if entityHit ~= 0 then
+                        local success, result = pcall(GetEntityType, entityHit)
+                        entityType = success and result or 0
+                    end
                 end
             end
+        elseif (entityHit == 0 or not DoesEntityExist(entityHit)) then
+            state.setActive(false);
         end
 
         nearbyZones, zonesChanged = utils.getNearbyZones(endCoords)
@@ -343,6 +349,8 @@ local function startTargeting()
     options:wipe()
 
     if nearbyZones then table.wipe(nearbyZones) end
+
+    menuOpen = false;
 end
 
 do
