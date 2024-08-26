@@ -6,25 +6,33 @@ async function fetchNui(eventName, data) {
     headers: {
       "Content-Type": "application/json; charset=UTF-8",
     },
-    body: JSON.stringify((data || {})),
+    body: JSON.stringify(data),
   });
   return await resp.json();
 }
 
 // CreateOption Component
-const CreateOption = ({ data, mainColor, onSelect }) => {
+const CreateOption = ({ type, data, id, zoneId, mainColor, onSelect }) => {
+  const handleClick = React.useCallback(() => {
+    // Disable pointer events to prevent multiple rapid clicks
+    const element = event.currentTarget;
+    element.style.pointerEvents = "none";
+    onSelect();
+    setTimeout(() => (element.style.pointerEvents = "auto"), 100);
+  }, [onSelect]);
+
   return (
     <div
       className="option-container"
-      onClick={onSelect}
+      onClick={handleClick}
       style={{
         borderColor: `${mainColor}`,
       }}
     >
       <i
-        class={`fa-fw ${data.icon} option-icon`}
+        className={`fa-fw ${data.icon} option-icon`}
         style={{
-          color: `${mainColor}`,
+          color: data.iconColor || mainColor,
         }}
       ></i>
       <p className="option-label">{data.label}</p>
@@ -37,12 +45,14 @@ const App = () => {
   const [isVisible, setIsVisible] = React.useState(false);
   const [eyeHover, setEyeHover] = React.useState(false);
   const [options, setOptions] = React.useState([]);
+  const [zones, setZones] = React.useState([]);
   const [mainColor, setMainColor] = React.useState("#cfd2da");
   const [parentGroups, setParentGroups] = React.useState([]);
   const [selectedGroup, setSelectedGroup] = React.useState(null);
 
   const handleMessage = (event) => {
     setOptions([]);
+    setZones([]);
 
     switch (event.data.event) {
       case "visible": {
@@ -83,6 +93,18 @@ const App = () => {
             setSelectedGroup(null);
           }
         }
+
+        if (event.data.zones) {
+          const newZones = event.data.zones.flatMap((zoneOptions, zoneIndex) =>
+            zoneOptions.map((data, id) => ({
+              type: "zones",
+              data,
+              id: id + 1,
+              zoneId: zoneIndex + 1,
+            }))
+          );
+          setZones(newZones);
+        }
         break;
       }
       default:
@@ -103,7 +125,11 @@ const App = () => {
     };
   }, []);
 
-  if (!isVisible) return <React.Fragment></React.Fragment>;
+  if (!isVisible) return null;
+
+  const handleSelect = (type, id, zoneId) => {
+    fetchNui("select", [type, id, zoneId]);
+  };
 
   return (
     <div id="app">
@@ -143,18 +169,24 @@ const App = () => {
             (option) =>
               !option.data.hide && option.data.parentGroup == selectedGroup
           )
-          .map((option) => {
-            const { type, id } = option;
-            const onSelect = () => fetchNui("select", [type, id]);
-            return (
-              <CreateOption
-                {...option}
-                onSelect={onSelect}
-                mainColor={mainColor}
-                key={`${option.type}-${option.id}`}
-              />
-            );
-          })}
+          .map((option) => (
+            <CreateOption
+              {...option}
+              onSelect={() => handleSelect(option.type, option.id)}
+              mainColor={mainColor}
+              key={`${option.type}-${option.id}`}
+            />
+          ))}
+        {zones
+          .filter((zone) => !zone.data.hide)
+          .map((zone) => (
+            <CreateOption
+              {...zone}
+              onSelect={() => handleSelect(zone.type, zone.id, zone.zoneId)}
+              mainColor={mainColor}
+              key={`zone-${zone.zoneId}-${zone.id}`}
+            />
+          ))}
       </div>
     </div>
   );
